@@ -1,3 +1,7 @@
+v0.2.0
+=========
+* __Feature:__ Allows to choose between a string based token verification, or key based verification
+
 v0.1.0
 =========
 

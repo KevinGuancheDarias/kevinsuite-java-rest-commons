@@ -65,8 +65,7 @@ public class CorsFilter extends OncePerRequestFilter {
 					"Use headers from corsConfigurator has not been implemented, is it even required?");
 		}
 		if (corsConfigurator.getMethodList() != null) {
-			throw new AssertionError(
-					"Use methods from corsConfigurator has not been implemented, is it even required?");
+			response.setHeader("Access-Control-Allow-Methods", String.join(", ", corsConfigurator.getMethodList()));
 		}
 
 		response.addHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"));

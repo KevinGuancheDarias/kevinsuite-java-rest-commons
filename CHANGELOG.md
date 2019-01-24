@@ -1,3 +1,7 @@
+v0.3.0
+========
+* __Feature:__ Allow to define accepted HTTP Methods
+
 v0.2.1
 ========
 * __Fix:__ System not properly handling the token date

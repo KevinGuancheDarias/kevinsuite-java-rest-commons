@@ -10,7 +10,6 @@ import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,7 +33,6 @@ import com.kevinguanchedarias.kevinsuite.commons.rest.exception.CommonRestExcept
 import com.kevinguanchedarias.kevinsuite.commons.rest.exception.FileNotFoundException;
 import com.kevinguanchedarias.kevinsuite.commons.rest.exception.InvalidAuthorizationHeader;
 import com.kevinguanchedarias.kevinsuite.commons.rest.exception.InvalidVerificationMethod;
-import com.kevinguanchedarias.kevinsuite.commons.rest.exception.JwtTokenExpired;
 import com.kevinguanchedarias.kevinsuite.commons.rest.exception.MissingArgumentException;
 import com.kevinguanchedarias.kevinsuite.commons.rest.security.enumerations.TokenVerificationMethod;
 import com.kevinguanchedarias.kevinsuite.commons.rest.security.pojo.BackendErrorPojo;
@@ -214,13 +212,7 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 			throw new InvalidVerificationMethod(
 					"No such method: " + tokenConfigLoader.getVerificationMethod().toString());
 		}
-		Claims body = parser.parseClaimsJws(token).getBody();
-		Date now = new Date();
-		Date expiration = new Date(body.getExpiration().getTime() / 1000);
-		if (now.after(expiration)) {
-			throw new JwtTokenExpired("Session has expired");
-		}
-		return body;
+		return parser.parseClaimsJws(token).getBody();
 	}
 
 	/**

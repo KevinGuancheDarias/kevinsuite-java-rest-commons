@@ -205,7 +205,7 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 	protected Claims getTokenClaimsIfNotExpired(String token) {
 		JwtParser parser = Jwts.parser();
 		if (tokenConfigLoader.getVerificationMethod() == TokenVerificationMethod.SECRET) {
-			parser.setSigningKey(tokenConfigLoader.getTokenSecret());
+			parser.setSigningKey(tokenConfigLoader.getTokenSecret().getBytes());
 		} else if (tokenConfigLoader.getVerificationMethod() == TokenVerificationMethod.RSA_KEY) {
 			parser.setSigningKey(publicKey);
 		} else {

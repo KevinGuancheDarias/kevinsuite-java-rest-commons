@@ -45,4 +45,15 @@ public interface TokenConfigLoader {
 	 * @author Kevin Guanche Darias <kevin@kevinguanchedarias.com>
 	 */
 	public String getPublicKey();
+
+	/**
+	 * Defines the allowed clock skew in secons
+	 * 
+	 * @return
+	 * @since 0.4.0
+	 * @author Kevin Guanche Darias <kevin@kevinguanchedarias.com>
+	 */
+	public default long getAllowedClockSkew() {
+		return 0L;
+	}
 }

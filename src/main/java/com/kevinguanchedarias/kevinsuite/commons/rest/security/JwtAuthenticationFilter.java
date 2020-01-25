@@ -122,8 +122,7 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 	}
 
 	/**
-	 * Listen to token validation messages, and customize application behavior
-	 * <br>
+	 * Listen to token validation messages, and customize application behavior <br>
 	 * <b>Set to something implementing the FilterEventHandler interface</b>
 	 * 
 	 * @param filterEventHandler
@@ -138,8 +137,8 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 	}
 
 	/**
-	 * Set to true, so, instead of throwing exception to the application server,
-	 * it will response a JSON 500 error
+	 * Set to true, so, instead of throwing exception to the application server, it
+	 * will response a JSON 500 error
 	 * 
 	 * @param convertExceptionToJson
 	 * @author Kevin Guanche Darias
@@ -154,8 +153,8 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 	 * @param algo
 	 * @return
 	 * @since 0.2.0
-	 * @throws MissingArgumentException
-	 *             When privatekey is not defined, and key method is RSA_KEY
+	 * @throws MissingArgumentException When privatekey is not defined, and key
+	 *                                  method is RSA_KEY
 	 * @author Kevin Guanche Darias <kevin@kevinguanchedarias.com>
 	 */
 	public String buildToken(Map<String, Object> claims, SignatureAlgorithm algo) {
@@ -204,6 +203,7 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 
 	protected Claims getTokenClaimsIfNotExpired(String token) {
 		JwtParser parser = Jwts.parser();
+		parser.setAllowedClockSkewSeconds(tokenConfigLoader.getAllowedClockSkew());
 		if (tokenConfigLoader.getVerificationMethod() == TokenVerificationMethod.SECRET) {
 			parser.setSigningKey(tokenConfigLoader.getTokenSecret().getBytes());
 		} else if (tokenConfigLoader.getVerificationMethod() == TokenVerificationMethod.RSA_KEY) {
@@ -239,14 +239,13 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 	 * exception if convertExceptionToJson is false
 	 * 
 	 * @param response
-	 * @param e
-	 *            Exception information
+	 * @param e        Exception information
 	 * @author Kevin Guanche Darias
 	 * @throws IOException
 	 * @throws JsonProcessingException
 	 */
 	protected void sendJsonOrThrowException(HttpServletResponse response, RuntimeException e) throws IOException {
-		if (convertExceptionToJson) {
+		if (Boolean.TRUE.equals(convertExceptionToJson)) {
 			ObjectMapper mapper = new ObjectMapper();
 			BackendErrorPojo errorPojo = new BackendErrorPojo();
 			errorPojo.setExceptionType(e.getClass().getSimpleName());

@@ -1,3 +1,8 @@
+v0.4.0
+========
+
+* __Feature:__ Allow to specify a clock skew
+
 v0.3.1
 ========
 * __Fix:__ [Change the way kevinsuite handles string based secrets #1](https://github.com/KevinGuancheDarias/kevinsuite-java-rest-commons/issues/1)

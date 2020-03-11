@@ -53,9 +53,21 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 	private PublicKey publicKey;
 	private PrivateKey privateKey;
 	private Boolean convertExceptionToJson = false;
+	private boolean useAntMatcher = false;
 
 	public JwtAuthenticationFilter() {
 		super("/**");
+	}
+
+	/**
+	 * 
+	 * @param useAntMatcher
+	 * @since 0.4.1
+	 * @author Kevin Guanche Darias <kevin@kevinguanchedarias.com>
+	 */
+	public JwtAuthenticationFilter(boolean useAntMatcher) {
+		super("/**");
+		this.useAntMatcher = useAntMatcher;
 	}
 
 	/**
@@ -86,7 +98,7 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 
 	@Override
 	protected boolean requiresAuthentication(HttpServletRequest request, HttpServletResponse response) {
-		return true;
+		return !useAntMatcher || super.requiresAuthentication(request, response);
 	}
 
 	@Override

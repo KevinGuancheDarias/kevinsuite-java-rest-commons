@@ -1,3 +1,7 @@
+v0.4.1
+=========
+* __Fix:__ Allow to use the ant matcher patterns (usually used in Spring Boot setups, see OWGE v0.9.0)
+
 v0.4.0
 ========
 

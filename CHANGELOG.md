@@ -1,3 +1,9 @@
+v0.4.2
+=========
+* __Improvement:__ Modernize the source code, but keep supporting jdk 8
+* __Improvement:__ Remove unused dependencies
+* __Security:__ Fix all dependencies with known security issues
+
 v0.4.1
 =========
 * __Fix:__ Allow to use the ant matcher patterns (usually used in Spring Boot setups, see OWGE v0.9.0)

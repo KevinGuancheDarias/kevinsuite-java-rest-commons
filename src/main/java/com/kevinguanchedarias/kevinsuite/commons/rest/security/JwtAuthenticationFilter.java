@@ -1,57 +1,52 @@
 package com.kevinguanchedarias.kevinsuite.commons.rest.security;
 
-import java.io.IOException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.Security;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.log4j.Logger;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kevinguanchedarias.kevinsuite.commons.rest.exception.*;
+import com.kevinguanchedarias.kevinsuite.commons.rest.security.enumerations.TokenVerificationMethod;
+import com.kevinguanchedarias.kevinsuite.commons.rest.security.pojo.BackendErrorPojo;
+import com.kevinguanchedarias.kevinsuite.commons.rest.security.pojo.PemFile;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.util.StringUtils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kevinguanchedarias.kevinsuite.commons.rest.exception.CommonJwtException;
-import com.kevinguanchedarias.kevinsuite.commons.rest.exception.CommonRestException;
-import com.kevinguanchedarias.kevinsuite.commons.rest.exception.FileNotFoundException;
-import com.kevinguanchedarias.kevinsuite.commons.rest.exception.InvalidAuthorizationHeader;
-import com.kevinguanchedarias.kevinsuite.commons.rest.exception.InvalidVerificationMethod;
-import com.kevinguanchedarias.kevinsuite.commons.rest.exception.MissingArgumentException;
-import com.kevinguanchedarias.kevinsuite.commons.rest.security.enumerations.TokenVerificationMethod;
-import com.kevinguanchedarias.kevinsuite.commons.rest.security.pojo.BackendErrorPojo;
-import com.kevinguanchedarias.kevinsuite.commons.rest.security.pojo.PemFile;
+import javax.annotation.PostConstruct;
+import javax.crypto.SecretKey;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.HashMap;
+import java.util.Map;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtParser;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
-
+@Slf4j
 public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
-	private static final Logger LOCAL_LOGGER = Logger.getLogger(JwtAuthenticationFilter.class);
 
+	@Getter
+	@Setter
 	private TokenConfigLoader tokenConfigLoader;
+
+	@Getter
+	@Setter
 	private FilterEventHandler filterEventHandler;
 
 	private PublicKey publicKey;
 	private PrivateKey privateKey;
+
+	@Getter
+	@Setter
 	private Boolean convertExceptionToJson = false;
 	private boolean useAntMatcher = false;
 
@@ -60,8 +55,7 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 	}
 
 	/**
-	 * 
-	 * @param useAntMatcher
+	 *
 	 * @since 0.4.1
 	 * @author Kevin Guanche Darias <kevin@kevinguanchedarias.com>
 	 */
@@ -83,8 +77,8 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 			try {
 				KeyFactory keyFactory = KeyFactory.getInstance("RSA", "BC");
 				publicKey = generatePublicKey(keyFactory, tokenConfigLoader.getPublicKey());
-				if (StringUtils.isEmpty(tokenConfigLoader.getPrivateKey())) {
-					LOCAL_LOGGER.debug("Notice: No private key was specified, will not be possible to sign tokens");
+				if (!StringUtils.hasLength(tokenConfigLoader.getPrivateKey())) {
+					log.debug("Notice: No private key was specified, will not be possible to sign tokens");
 				} else {
 					privateKey = generatePrivateKey(keyFactory, tokenConfigLoader.getPrivateKey());
 				}
@@ -112,58 +106,17 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 			TokenUser user = decodeTokenIfPossible(findTokenInRequest(request));
 			return getAuthenticationManager().authenticate(user);
 		} catch (CommonJwtException | CommonRestException e) {
-			LOCAL_LOGGER.info(e.getMessage());
+			log.info(e.getMessage());
 			sendJsonOrThrowException(response, e);
 		} catch (RuntimeException e) {
-			LOCAL_LOGGER.error("Fatal error occured", e);
+			log.error("Fatal error occured", e);
 			sendJsonOrThrowException(response, e);
 		}
 		return null;
 	}
 
-	public TokenConfigLoader getTokenConfigLoader() {
-		return tokenConfigLoader;
-	}
-
-	public void setTokenConfigLoader(TokenConfigLoader tokenConfigLoader) {
-		this.tokenConfigLoader = tokenConfigLoader;
-	}
-
-	public FilterEventHandler getFilterEventHandler() {
-		return filterEventHandler;
-	}
-
 	/**
-	 * Listen to token validation messages, and customize application behavior <br>
-	 * <b>Set to something implementing the FilterEventHandler interface</b>
-	 * 
-	 * @param filterEventHandler
-	 * @author Kevin Guanche Darias
-	 */
-	public void setFilterEventHandler(FilterEventHandler filterEventHandler) {
-		this.filterEventHandler = filterEventHandler;
-	}
-
-	public Boolean getConvertExceptionToJson() {
-		return convertExceptionToJson;
-	}
-
-	/**
-	 * Set to true, so, instead of throwing exception to the application server, it
-	 * will response a JSON 500 error
-	 * 
-	 * @param convertExceptionToJson
-	 * @author Kevin Guanche Darias
-	 */
-	public void setConvertExceptionToJson(Boolean convertExceptionToJson) {
-		this.convertExceptionToJson = convertExceptionToJson;
-	}
-
-	/**
-	 * 
-	 * @param claims
-	 * @param algo
-	 * @return
+	 *
 	 * @since 0.2.0
 	 * @throws MissingArgumentException When privatekey is not defined, and key
 	 *                                  method is RSA_KEY
@@ -171,12 +124,13 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 	 */
 	public String buildToken(Map<String, Object> claims, SignatureAlgorithm algo) {
 		if (tokenConfigLoader.getVerificationMethod() == TokenVerificationMethod.SECRET) {
-			return Jwts.builder().setClaims(claims).signWith(algo, tokenConfigLoader.getTokenSecret()).compact();
+			SecretKey key = Keys.hmacShaKeyFor(tokenConfigLoader.getTokenSecret().getBytes(StandardCharsets.UTF_8));
+			return Jwts.builder().setClaims(claims).signWith(key, algo).compact();
 		} else if (tokenConfigLoader.getVerificationMethod() == TokenVerificationMethod.RSA_KEY) {
 			if (privateKey == null) {
 				throw new MissingArgumentException("Private key was not specified");
 			}
-			return Jwts.builder().setClaims(claims).signWith(algo, privateKey).compact();
+			return Jwts.builder().setClaims(claims).signWith(privateKey, algo).compact();
 		} else {
 			throw new InvalidVerificationMethod(
 					"No such method: " + tokenConfigLoader.getVerificationMethod().toString());
@@ -196,7 +150,6 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 		chain.doFilter(request, response);
 	}
 
-	@SuppressWarnings("unchecked")
 	protected TokenUser decodeTokenIfPossible(String token) {
 		TokenUser user = null;
 		try {
@@ -214,23 +167,23 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 	}
 
 	protected Claims getTokenClaimsIfNotExpired(String token) {
-		JwtParser parser = Jwts.parser();
-		parser.setAllowedClockSkewSeconds(tokenConfigLoader.getAllowedClockSkew());
+		JwtParserBuilder parserBuilder = Jwts.parserBuilder()
+				.setAllowedClockSkewSeconds(tokenConfigLoader.getAllowedClockSkew());
 		if (tokenConfigLoader.getVerificationMethod() == TokenVerificationMethod.SECRET) {
-			parser.setSigningKey(tokenConfigLoader.getTokenSecret().getBytes());
+			parserBuilder.setSigningKey(tokenConfigLoader.getTokenSecret().getBytes());
 		} else if (tokenConfigLoader.getVerificationMethod() == TokenVerificationMethod.RSA_KEY) {
-			parser.setSigningKey(publicKey);
+			parserBuilder.setSigningKey(publicKey);
 		} else {
 			throw new InvalidVerificationMethod(
 					"No such method: " + tokenConfigLoader.getVerificationMethod().toString());
 		}
+		JwtParser parser = parserBuilder.build();
 		return parser.parseClaimsJws(token).getBody();
 	}
 
 	/**
 	 * Will return the JWT token obtained from HTTP Authorization header
 	 * 
-	 * @return
 	 * @author Kevin Guanche Darias
 	 */
 	protected String findTokenInRequest(HttpServletRequest request) {
@@ -250,11 +203,8 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 	 * Instead of throwing exception, creates a JSON encoded error Or throws
 	 * exception if convertExceptionToJson is false
 	 * 
-	 * @param response
 	 * @param e        Exception information
 	 * @author Kevin Guanche Darias
-	 * @throws IOException
-	 * @throws JsonProcessingException
 	 */
 	protected void sendJsonOrThrowException(HttpServletResponse response, RuntimeException e) throws IOException {
 		if (Boolean.TRUE.equals(convertExceptionToJson)) {
@@ -262,7 +212,7 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 			BackendErrorPojo errorPojo = new BackendErrorPojo();
 			errorPojo.setExceptionType(e.getClass().getSimpleName());
 			errorPojo.setMessage(e.getMessage());
-			response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
+			response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 			response.getWriter().print(mapper.writeValueAsString(errorPojo));
 		} else {

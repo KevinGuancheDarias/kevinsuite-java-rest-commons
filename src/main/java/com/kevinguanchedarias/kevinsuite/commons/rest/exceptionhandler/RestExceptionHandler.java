@@ -1,6 +1,6 @@
 package com.kevinguanchedarias.kevinsuite.commons.rest.exceptionhandler;
 
-import org.apache.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -19,15 +19,15 @@ import com.kevinguanchedarias.kevinsuite.commons.rest.security.pojo.BackendError
  * @author Kevin Guanche Darias
  *
  */
+@Slf4j
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
-	private static final Logger LOCAL_LOGGER = Logger.getLogger(RestExceptionHandler.class);
 
 	@ExceptionHandler({ Exception.class })
 	protected ResponseEntity<Object> handleAnyException(Exception e, WebRequest request) {
 		BackendErrorPojo response = new BackendErrorPojo();
 		response.setExceptionType("InternalServerError");
 		response.setMessage("Unexpected server error");
-		LOCAL_LOGGER.error(e.getMessage(), e);
+		log.error(e.getMessage(), e);
 
 		return handleExceptionInternal(e, response, prepareCommonHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
 	}
@@ -41,10 +41,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 	/**
 	 * Handles game exceptions, just call it from custom @ExceptionHandler
 	 * <br />
-	 * 
-	 * @param e
-	 * @param request
-	 * @return
+	 *
 	 * @author Kevin Guanche Darias
 	 */
 	protected ResponseEntity<Object> handleGameException(Exception e, WebRequest request) {
@@ -54,23 +51,20 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 	/**
 	 * Handles game exceptions, just call it from custom @ExceptionHandler
 	 * <br />
-	 * 
-	 * @param e
-	 * @param request
-	 * @return
+	 *
 	 * @author Kevin Guanche Darias
 	 */
 	protected ResponseEntity<Object> handleGameException(Exception e, WebRequest request, HttpStatus status) {
 		BackendErrorPojo response = new BackendErrorPojo();
 		response.setExceptionType(e.getClass().getSimpleName());
 		response.setMessage(e.getMessage());
-		LOCAL_LOGGER.debug(e);
+		log.trace("Known to be thrown exception",e);
 		return handleExceptionInternal(e, response, prepareCommonHeaders(), status, request);
 	}
 
 	protected HttpHeaders prepareCommonHeaders() {
 		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+		headers.setContentType(MediaType.APPLICATION_JSON);
 		return headers;
 	}
 }

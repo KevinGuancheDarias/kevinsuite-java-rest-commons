@@ -1,32 +1,28 @@
 package com.kevinguanchedarias.kevinsuite.commons.rest.security.cors;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
+import com.kevinguanchedarias.kevinsuite.commons.rest.cors.exception.InvalidOriginException;
+import com.kevinguanchedarias.kevinsuite.commons.rest.exception.CommonJwtException;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
 
-import org.apache.log4j.Logger;
-import org.springframework.web.filter.OncePerRequestFilter;
-
-import com.kevinguanchedarias.kevinsuite.commons.rest.cors.exception.InvalidOriginException;
-import com.kevinguanchedarias.kevinsuite.commons.rest.exception.CommonJwtException;
-
+@Slf4j
 public class CorsFilter extends OncePerRequestFilter {
 
-	private static final Logger LOCAL_LOGGER = Logger.getLogger(CorsFilter.class);
 	private static final String ALLOW_ANY_ORIGIN = "*";
 	private static final String MAX_CACHE_SIZE = "86400";
 
+	@Getter
 	private CorsConfigurator corsConfigurator;
-
-	public CorsConfigurator getCorsConfigurator() {
-		return corsConfigurator;
-	}
 
 	public void setCorsConfigurator(CorsConfigurator corsConfigurator) {
 		this.corsConfigurator = corsConfigurator;
@@ -41,9 +37,9 @@ public class CorsFilter extends OncePerRequestFilter {
 			checkValidOrigin(clientOriginHeader);
 			addHeadersFromConfigurator(request, response);
 		} else if (corsConfigurator == null) {
-			LOCAL_LOGGER.warn(this.getClass().getName() + " is doing nothing, as CorsConfigurator has not been set!");
+			log.warn(this.getClass().getName() + " is doing nothing, as CorsConfigurator has not been set!");
 		} else {
-			LOCAL_LOGGER.debug("Client didn't send the origin header");
+			log.debug("Client didn't send the origin header");
 		}
 
 		if ("OPTIONS".equals(request.getMethod())) {

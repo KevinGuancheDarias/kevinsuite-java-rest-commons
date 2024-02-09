@@ -1,13 +1,13 @@
 package com.kevinguanchedarias.kevinsuite.commons.rest.security.cors;
 
 import com.kevinguanchedarias.kevinsuite.commons.rest.cors.exception.InvalidOriginException;
+import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;

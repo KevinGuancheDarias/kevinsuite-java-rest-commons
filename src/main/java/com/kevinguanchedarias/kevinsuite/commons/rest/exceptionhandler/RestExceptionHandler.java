@@ -1,10 +1,7 @@
 package com.kevinguanchedarias.kevinsuite.commons.rest.exceptionhandler;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -33,9 +30,10 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	@Override
-	protected ResponseEntity<Object> handleMissingServletRequestParameter(MissingServletRequestParameterException e,
-			HttpHeaders headers, HttpStatus status, WebRequest request) {
-		return handleGameException(e, request);
+	protected ResponseEntity<Object> handleMissingServletRequestParameter(
+			MissingServletRequestParameterException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request
+	) {
+		return handleGameException(ex, request);
 	}
 
 	/**
